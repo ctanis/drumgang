@@ -1,0 +1,34 @@
+<html>
+<head>
+  <title>Gang Drum Demo</title>
+<script type="text/javascript" src="lib/jquery-1.11.2.min.js"></script>
+  <script type="text/javascript" src="gangdrum.js"></script>
+  <script>
+    $( document ).ready(function() {
+    start("drumui");
+    });
+  </script>
+
+</head>
+
+<body >
+
+  <input type=submit value="start" onClick="return drum_machine.start()" /><br/>
+  <input type=submit value="stop" onClick="return drum_machine.stop()" />
+
+  <br/>
+  Tempo:
+  <input type="range" min="20" max="300" oninput="drum_machine.setTempo(this.value)" step=1
+       value=120> 
+  <br/>
+
+  <div id="drumui" style="border: solid 1px black;">
+
+    
+
+  </div>
+
+
+</body>
+</html>
+

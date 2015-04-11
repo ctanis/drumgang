@@ -1,0 +1,8 @@
+{
+  "name": "gangdrum-demo",
+  "version": "0.0.1",
+  "description": "gangdrum socket.io backend",
+  "dependencies": {
+    "express": "^4.12.3"
+  }
+}
