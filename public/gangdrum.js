@@ -1,68 +1,49 @@
 'use strict';
 
-var drum_machine;
 var drum_ui;
 
-function start(uielt) {
-    drum_machine = new GangDrum(window.AudioContext || window.webkitAudioContext);
-    drum_ui = new DrumUI(uielt);
-
-    // load kick drum
+// load a channel using wave file from URL
+function load(name, url) {
     var request = new XMLHttpRequest();
+
     request.onload = function() {
 
         var audiodata = request.response;
-        console.log("got kick");
+        console.log("loaded " + name + " from " + url);
 
-        drum_machine.audio.decodeAudioData(audiodata, function(buffer) {
-            var chan=drum_machine.addChannel('Kick1', buffer);
-            chan.div=2;
+        drum_ui.drum_machine.audio.decodeAudioData(audiodata, function(buffer) {
+            drum_ui.newTrack(name, buffer);
         });
     };
 
     request.error = function(e) {
-            console.log("request.error called. Error: " + e);
-        };
+        console.log("error loading " + name + " from " + url + " -- " + e);
+    };
 
-
-    request.open('GET', 'samples/kick1.wav', true);
+    request.open('GET', url, true);
     request.responseType = 'arraybuffer';
     request.send(null);
-
-    // load boop
-    var req2 = new XMLHttpRequest();
-    req2.onload = function() {
-
-        var audiodata = req2.response;
-        console.log("got kick");
-
-        drum_machine.audio.decodeAudioData(audiodata, function(buffer) {
-            var chan = drum_machine.addChannel('Boop', buffer);
-            chan.div=8;
-        });
-    }
-
-    req2.error = function(e) {
-            console.log("req2.error called. Error: " + e);
-        };
-
-
-    req2.open('GET', 'samples/boop.wav', true);
-    req2.responseType = 'arraybuffer';
-    req2.send(null);
-
 }
 
+
+function start(uielt) {
+    drum_ui = new DrumUI(uielt);
+
+    load('Kick1', 'samples/kick1.wav');
+    load('Boop', 'samples/boop.wav');
+
+}
 
 
 
 // a single drum track, routing to master.
 // identified by name
 // audio data decoded into buffer
-function DrumChannel(audio, master, name, buffer) {
+function DrumChannel(audio, master, name, buffer, notes) {
     
     this.name = name;
     this.buffer = buffer;
+    this.notes = notes;
 
     this.gainNode = audio.createGain();
     this.gainNode.connect(master);
@@ -73,7 +54,6 @@ function DrumChannel(audio, master, name, buffer) {
         source.buffer = this.buffer;
         source.connect(this.gainNode);
         source.start(0);
-        
     };
 
     this.setVol = function(gain)
@@ -89,7 +69,8 @@ function DrumChannel(audio, master, name, buffer) {
 
     this.triggerNote = function(note) {
 
-        if (note % this.div == 0)
+        console.log("n: " + this.notes[note]);
+        if (this.notes[note])
         {
             this.play();
         }
@@ -104,23 +85,25 @@ function DrumChannel(audio, master, name, buffer) {
 function GangDrum(audio) {
 
     this.audio = new audio();
+    this.channels = [];
 
+    // synchronization/timing settings
     this.tempo = 120;           //beats per minute
     this.ticks = 64;            //ticks per second
-    this.loopLen=16;            //notes per loop
+    this.loopLen=32;            //notes per loop
     this.notesPerBeat=4;        //
     this.ticksPerNote=-1;
 
-
     this.updateTiming = function() {
         this.ticksPerNote = this.ticks * 60 / this.tempo / this.notesPerBeat;
+        console.log("tpn: " + this.ticksPerNote);
+        console.log("tpl: " + this.ticksPerNote * this.loopLen);
     };
 
     this.updateTiming();
 
-    this.ui = null;
-    this.channels = [];
-    this.playing=false;
+    this.uiCallback=null;
+
 
     // master bus compressor
     this.master = this.audio.createDynamicsCompressor();
@@ -130,14 +113,14 @@ function GangDrum(audio) {
     this.master.reduction.value = -20;
     this.master.attack.value = 0;
     this.master.release.value = 0.25;
-
     this.master.connect(this.audio.destination);
 
     this.tick=0;
+    this.playing=false;
+
 
     this.start = function() {
         this.playing = true;
-        console.log("starting " + this.playing);
 
         this.doTimer(1,         // 1 unit
                      this.ticks,        // 64 per second
@@ -148,7 +131,6 @@ function GangDrum(audio) {
 
 
     this.stop = function() {
-        console.log("stopping " + this.playing);
         this.playing = false;
     };
 
@@ -161,7 +143,7 @@ function GangDrum(audio) {
         // hit every channel with the current position
 
         this.tick++;
-        if (this.tick > this.ticksPerNote * this.loopLen)
+        if (this.tick >= this.ticksPerNote * this.loopLen)
             this.tick=0;
 
         var note = (this.tick / this.ticksPerNote) |0;
@@ -177,8 +159,11 @@ function GangDrum(audio) {
                 this.channels[i].triggerNote(note);
             }
 
+            if (this.uiCallback)
+            {
+                this.uiCallback(note);
+            }
         }
-
 
         // this.count++;
 
@@ -201,12 +186,12 @@ function GangDrum(audio) {
 
 
 
-    this.addChannel = function(name, buffer)
+    this.addChannel = function(name, buffer, notes)
     {
         console.log('adding channel:' + name);
-        var nc = new DrumChannel(this.audio, this.master, name, buffer)
+        var nc = new DrumChannel(this.audio, this.master, name, buffer, notes)
         this.channels.push(nc);
-        return nc;
+        return this.channels.length-1;
         
     };
     
@@ -254,10 +239,63 @@ function GangDrum(audio) {
 
 
 function DrumUI(docelt) {
-    this.docelt = docelt;
+    this.trackdata=[];
 
-    this.draw = function() {
-        
-    };
+    this.docelt = docelt;
+    this.drum_machine
+        = new GangDrum(window.AudioContext || window.webkitAudioContext);
     
+    this.play = function() {
+        this.drum_machine.start();
+    };
+
+    this.pause = function() {
+        this.drum_machine.stop();
+    };
+
+    this.setTempo = function(tempo) {
+        this.drum_machine.setTempo(tempo);
+    }
+
+    this.newTrack = function(name, audiodata) {
+
+        var td = [];
+        var track = this.drum_machine.addChannel(name, audiodata, td);
+        this.trackdata[track]=td;
+
+        var container = $( this.docelt );
+
+        container.append('<div id="'+name+ '"><div class="trackname">'+name+'</div></div>');
+
+        for (var i=0;  i<this.drum_machine.loopLen; i++)
+        {
+            console.log(td);
+            $('#'+name).append('<span class="s'+i+'">'+
+                               '<input type="checkbox" id="n'+track+'-'+i +'"/>' +
+                               '</span>');
+
+            $('#n'+track+'-'+i).change(
+                function(d, x) {return function()
+                {
+                    // toggle note for track, note x
+                    if (typeof d[x] == 'undefined' )
+                    {
+                        d[x]=0;
+                    }
+
+                    d[x] = (d[x]+1) % 2;
+                    console.log(d);
+                }}(td, i)
+            );
+        }
+
+    };
+
+    this.drawTime = function(note) {
+        $('.s'+note).css("background-color", "blue");
+        var prevnote = (note + this.drum_machine.loopLen-1)%this.drum_machine.loopLen;
+        $('.s'+prevnote).css("background-color", "white");
+    };
+
+    this.drum_machine.uiCallback=this.drawTime.bind(this);
 }

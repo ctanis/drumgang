@@ -5,27 +5,32 @@
   <script type="text/javascript" src="gangdrum.js"></script>
   <script>
     $( document ).ready(function() {
-    start("drumui");
+    start("#drum");
     });
   </script>
+
+    <style media="screen" type="text/css">
+      .trackname {
+      float:left;
+      width: 50px;
+    }
+  </style>
+
 
 </head>
 
 <body >
 
-  <input type=submit value="start" onClick="return drum_machine.start()" /><br/>
-  <input type=submit value="stop" onClick="return drum_machine.stop()" />
+  <input type=submit value="start" onClick="return drum_ui.play()" /><br/>
+  <input type=submit value="stop" onClick="return drum_ui.pause()" />
 
   <br/>
   Tempo:
-  <input type="range" min="20" max="300" oninput="drum_machine.setTempo(this.value)" step=1
+  <input type="range" min="20" max="300" oninput="return drum_ui.setTempo(this.value)" step=1
        value=120> 
   <br/>
 
-  <div id="drumui" style="border: solid 1px black;">
-
-    
-
+  <div id="drum" style="border: solid 1px black;">
   </div>
 
 
