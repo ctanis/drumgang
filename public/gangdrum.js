@@ -167,6 +167,12 @@ function DrumUI(uielt) {
 
         });
 
+        socket.on('sync', function(msg) {
+            drum_engine.tick=0;
+            drum_engine.start();
+            $('#playbutton').val('pause');
+        });
+
 
     }
 
@@ -732,4 +738,11 @@ function loadPre() {
 function updateTempo(t) {
     $('#tempo').val(t);
     drum_ui.setTempo();
+}
+
+
+function syncSession() {
+    if (socket) {
+        socket.emit('sync');
+    }
 }

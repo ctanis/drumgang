@@ -5,6 +5,11 @@ var app = express();
 app.use(express.static('public'));
 app.use('/samples', express.static('samples'));
 
+app.get('/' , function(req, res) {
+    res.redirect('/drum.html');
+})
+
+
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
@@ -39,9 +44,15 @@ io.on('connection', function(socket) {
     });
 
     socket.on('tempo', function(msg) {
-        console.log('tempo change: ' +msg);
+        // console.log('tempo change: ' +msg);
         // io.emit('drum', msg);
         socket.broadcast.emit('tempo', msg);
+    });
+
+    socket.on('sync', function(msg) {
+        console.log('sync');
+        socket.broadcast.emit('sync');
+        socket.emit('sync');
     });
 
 
