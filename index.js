@@ -32,6 +32,18 @@ io.on('connection', function(socket) {
         socket.broadcast.emit('sound', msg);
     });
 
+    socket.on('presound', function(msg) {
+        console.log('load preset: ' +msg);
+        // io.emit('drum', msg);
+        socket.broadcast.emit('presound', msg);
+    });
+
+    socket.on('tempo', function(msg) {
+        console.log('tempo change: ' +msg);
+        // io.emit('drum', msg);
+        socket.broadcast.emit('tempo', msg);
+    });
+
 
 
 });

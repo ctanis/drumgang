@@ -3,46 +3,110 @@
     <title>Gang Drum Demo</title>
     <script type="text/javascript" src="lib/jquery-1.11.2.min.js"></script>
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="gangdrum.js"></script>
     <script type="text/javascript" src="lib/recorder.js"></script>
+    <script type="text/javascript" src="gangdrum.js"></script>
+    <link rel="stylesheet" type="text/css" href="gangdrum.css" />
 
     <script>
       $( document ).ready(function() {
-      start("#drum");
+      start();
       });
     </script>
-
-    <style media="screen" type="text/css">
-      .trackname {
-      float:left;
-      width: 50px;
-      }
-    </style>
 
 
   </head>
 
-  <body >
+  <body>
 
-    <input type=submit value="start" onClick="return drum_ui.play()" /><br/>
-    <input type=submit value="stop" onClick="return drum_ui.pause()" />
+    <div id="drum">
 
-    <br/>
-    Tempo:
-    <input type="range" min="20" max="300" oninput="return drum_ui.setTempo(this.value)" step=1
+      <span style="font-size: 40">GangDrum</span><br>
+
+      <input id="playbutton" style="width: 50px" type=submit value="play" onClick="drum_ui.playPause()" />
+      <input id="stopbutton" style="width: 50px" type=submit value="stop"
+             onClick="drum_ui.stop()" />
+      <div style="display: inline-block; width: 50px">&nbsp;</div>
+
+      Tempo: <input id="tempo" type=text size=4 onChange="drum_ui.setTempo()" value=120 />
+      <input type="range" min="20" max="300" oninput="updateTempo(this.value)" step=1
            value=120> 
-    <br/>
+      <br/>
 
-    <div id="drum" style="border: solid 1px black;">
+
+      <div style="display: inline-block; width: 500px">&nbsp;</div>
+      <input id="stopbutton" style="width: 50px" type=submit value="clear"
+             onClick="drum_ui.clear()" />
+
+
+      <div id="sessionBox" style="float: right">
+        <input id="session" value="hackathon" />
+      </div>
+
+      <div id="tracks">
+      </div>
+
+      <canvas id="meter">
+        
+      </canvas>
+
+      <div id="recordingBox">
+        <div id="enableMic">
+          <input id="rec" type=submit value="enable microphone" onClick="enableMic()" />
+        </div>
+        <div id="recordMic">
+          <input id="rec" type=submit value="record new" onClick="recordNew()" />
+        </div>
+        <div id="stopMic">
+          <input id="rec" type=submit value="stop recording" onClick="recordStop()" />
+        </div>
+        <div id="saveMic">
+          <input id="recname" type=text value="new" />
+          <input id="rec" type=submit value="save recording"
+                 onClick="recordSave()" />
+          <input id="rec" type=submit value="cancel" onClick="recordCancel()" />
+        </div>
+      </div>
     </div>
 
-    <hr>
-
-    <input type=submit value="record new track"
-           onClick="return drum_ui.record()" />
-
-    <input type=submit value="stop recording new track"
-           onClick="return drum_ui.stopRecord()" />
+    <select id="sounds"  onchange="loadPre()">
+      <option>Add a drum!</option>
+      <option value="k18acoustic/CYCdh_K6-ClHat.wav">k18acoustic/CYCdh_K6-ClHat.wav</option>
+      <option value="k18acoustic/CYCdh_K6-Kick01.wav">k18acoustic/CYCdh_K6-Kick01.wav</option>
+      <option value="k18acoustic/CYCdh_K6-OpHat01.wav">k18acoustic/CYCdh_K6-OpHat01.wav</option>
+      <option value="k18acoustic/CYCdh_K6-OpHat02.wav">k18acoustic/CYCdh_K6-OpHat02.wav</option>
+      <option value="k18acoustic/CYCdh_K6-Snr01.wav">k18acoustic/CYCdh_K6-Snr01.wav</option>
+      <option value="k18acoustic/CYCdh_K6-Snr02.wav">k18acoustic/CYCdh_K6-Snr02.wav</option>
+      <option value="k18acoustic/CYCdh_K6-Snr03.wav">k18acoustic/CYCdh_K6-Snr03.wav</option>
+      <option value="k18acoustic/CYCdh_K6-Snr04.wav">k18acoustic/CYCdh_K6-Snr04.wav</option>
+      <option value="k18acoustic/CYCdh_K6-SnrBuzz.wav">k18acoustic/CYCdh_K6-SnrBuzz.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Clap01.wav">k5electro/CYCdh_ElecK02-Clap01.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Clap02.wav">k5electro/CYCdh_ElecK02-Clap02.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-ClHat01.wav">k5electro/CYCdh_ElecK02-ClHat01.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-ClHat02.wav">k5electro/CYCdh_ElecK02-ClHat02.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-FX01.wav">k5electro/CYCdh_ElecK02-FX01.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-FX02.wav">k5electro/CYCdh_ElecK02-FX02.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-FX03.wav">k5electro/CYCdh_ElecK02-FX03.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-HfHat.wav">k5electro/CYCdh_ElecK02-HfHat.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Kick01.wav">k5electro/CYCdh_ElecK02-Kick01.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Kick02.wav">k5electro/CYCdh_ElecK02-Kick02.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Snr01.wav">k5electro/CYCdh_ElecK02-Snr01.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Snr02.wav">k5electro/CYCdh_ElecK02-Snr02.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Tom01.wav">k5electro/CYCdh_ElecK02-Tom01.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Tom02.wav">k5electro/CYCdh_ElecK02-Tom02.wav</option>
+      <option value="k5electro/CYCdh_ElecK02-Tom03.wav">k5electro/CYCdh_ElecK02-Tom03.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-ClHat01.wav">k8vinyl/CYCdh_VinylK1-ClHat01.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-ClHat02.wav">k8vinyl/CYCdh_VinylK1-ClHat02.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Kick01.wav">k8vinyl/CYCdh_VinylK1-Kick01.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Kick02.wav">k8vinyl/CYCdh_VinylK1-Kick02.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Kick03.wav">k8vinyl/CYCdh_VinylK1-Kick03.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-OpHat.wav">k8vinyl/CYCdh_VinylK1-OpHat.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Shkr01.wav">k8vinyl/CYCdh_VinylK1-Shkr01.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Shkr02.wav">k8vinyl/CYCdh_VinylK1-Shkr02.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Shkr03.wav">k8vinyl/CYCdh_VinylK1-Shkr03.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Snr01.wav">k8vinyl/CYCdh_VinylK1-Snr01.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Snr02.wav">k8vinyl/CYCdh_VinylK1-Snr02.wav</option>
+      <option value="k8vinyl/CYCdh_VinylK1-Tamb.wav">k8vinyl/CYCdh_VinylK1-Tamb.wav</option>
+    </select>
 
 
   </body>

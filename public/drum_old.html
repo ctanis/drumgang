@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <title>Gang Drum Demo</title>
+    <script type="text/javascript" src="lib/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="gangdrum.js"></script>
+    <script type="text/javascript" src="lib/recorder.js"></script>
+
+    <script>
+      $( document ).ready(function() {
+      start("#drum");
+      });
+    </script>
+
+    <style media="screen" type="text/css">
+      .trackname {
+      float:left;
+      width: 50px;
+      }
+    </style>
+
+
+  </head>
+
+  <body >
+
+    <input type=submit value="start" onClick="return drum_ui.play()" /><br/>
+    <input type=submit value="stop" onClick="return drum_ui.pause()" />
+
+    <br/>
+    Tempo:
+    <input type="range" min="20" max="300" oninput="return drum_ui.setTempo(this.value)" step=1
+           value=120> 
+    <br/>
+
+    <div id="drum" style="border: solid 1px black;">
+    </div>
+
+    <hr>
+
+    <input type=submit value="record new track"
+           onClick="return drum_ui.record()" />
+
+    <input type=submit value="stop recording new track"
+           onClick="return drum_ui.stopRecord()" />
+
+
+  </body>
+</html>
+

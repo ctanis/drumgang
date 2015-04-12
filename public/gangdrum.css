@@ -23,7 +23,8 @@ body {
     display: inline-block;
     width: 120px;
     height: 20px;
-    text-align:center;
+    text-align:right;
+    padding-right: 4px;
 }
 
 .tracknotes {
@@ -102,6 +103,7 @@ input {
     width: 195px;
     height: 250px;
     background-color: black;
+    border: solid 1px green;
                
 }
 
