@@ -8,7 +8,8 @@ var drum_engine;                //underlying sequenced audio
 var audio;                      //the audio context
 var micinput;                   //html5 audio capture stream (not in Safari)
 var socket;                     //socket.io connection for data synchronization
-
+var fmeter;
+var recorder;
 
 // load a channel using wave file from URL
 function load(name, url) {
@@ -85,7 +86,20 @@ function start() {
 
 
     drum_ui.draw();
+
+    // set up  freq monitor
+    console.log("creating meter");
+    fmeter = new FMeter(document.getElementById("meter"));
+    fmeter.draw();
+
+
+    $('#recordMic').hide();
+    $('#stopMic').hide();
+    $('#saveMic').hide();
+
 }
+
+
 
 
 function DrumUI(uielt) {
@@ -102,7 +116,7 @@ function DrumUI(uielt) {
 
         // set up handlers
         socket.on('note', function(msg) {
-            console.log("got: " + msg);
+//            console.log("got: " + msg);
 
             var parts = msg.split('-');
 
@@ -111,9 +125,9 @@ function DrumUI(uielt) {
             var note=parts[1];
             var value=parts[2];
 
-            console.log(track);
-            console.log(note);
-            console.log(value);
+            // console.log(track);
+            // console.log(note);
+            // console.log(value);
 
             drum_ui.setNote(track,note,value);
         });
@@ -122,17 +136,17 @@ function DrumUI(uielt) {
         socket.on('sound', function(msg) {
             console.log(msg);
 
-            var audioContext = drum_ui.drum_machine.audio;
             var f32buff = new Float32Array(msg.data);
 
 
-            var newBuffer = audioContext.createBuffer( 1,
-                                                       f32buff.length,
-                                                       audioContext.sampleRate );
+            var newBuffer = audio.createBuffer( 1,
+                                                f32buff.length,
+                                                audio.sampleRate );
 
             newBuffer.getChannelData(0).set(f32buff);
 
-            drum_ui.newTrack(msg.name, newBuffer);
+            drum_engine.addChannel(msg.name, newBuffer);
+            drum_ui.renderTrack(msg.name);
         });
         
 
@@ -160,14 +174,17 @@ function DrumUI(uielt) {
     };
 
     this.stop = function() {
+
         drum_engine.stop();
-        drum_engine.tick=0;
 
         $('#playbutton').val('play');
 
         for (var n=0; n<drum_engine.loopLen; n++) {
             $('.s'+n).css("background-color", "");
         }
+
+        drum_engine.tick=0;
+
     };
 
     this.setTempo = function() {
@@ -480,3 +497,129 @@ GangDrum.prototype.doTimer = function(length, resolution, oninstance, oncomplete
 
     window.setTimeout(this.instance.bind(this), speed);
 };
+
+
+function FMeter(elt) {
+
+    this.analyser = audio.createAnalyser();
+    this.canvas=elt;
+    this.ctx2d = this.canvas.getContext("2d");
+    this.ctx2d.lineWidth=1;
+        
+    this.analyser.fftSize = 2048;
+
+    this.canvas.width=this.analyser.frequencyBinCount;
+    this.buffer = new Uint8Array(this.analyser.frequencyBinCount);
+    this.canvas.height=600;
+
+    drum_engine.master.connect(this.analyser);
+    this.analyser.connect(audio.destination);
+    
+    this.draw = function() {
+
+        requestAnimationFrame(this.draw.bind(this));
+        this.analyser.getByteFrequencyData(this.buffer);
+
+        this.ctx2d.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        var ctx = this.ctx2d;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 600);
+
+        var min=999;
+        var max=-999;
+        for (var i=0; i<this.buffer.length; i++)
+        {
+            ctx.lineTo(i, 600 - (this.buffer[i]/255 * 600));
+        }
+
+        ctx.strokeStyle = '#ddd';
+        ctx.fillStyle = '#f22';
+        ctx.fill();
+    };
+
+}
+
+
+function enableMic() {
+    
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+    if (typeof navigator.getUserMedia != 'undefined') {
+        navigator.getUserMedia({audio:true}, function(stream) {
+            micinput = audio.createMediaStreamSource(stream);
+            
+            $('#enableMic').hide();
+
+            if (micinput) {
+                $('#recordMic').show();
+
+                recorder = new Recorder(micinput,
+                                        {
+                                            workerPath: "lib/recorderWorker.js",
+                                            bufferLen: 256
+                                        });
+                console.log("Recorder initialized");
+            }
+            else
+            {
+                $('#recordingBox').html("Recording is not possible");
+            }
+
+        }, function(e) {
+            console.log("error: no live audio input! " + e);
+        });
+    }
+}
+
+var lastRecording=null
+
+function holdRecorded(buff) {
+    lastRecording=buff;
+}
+
+function recordNew() {
+    $('#recordMic').hide();
+    $('#stopMic').show();
+    recorder.record();
+}
+
+function recordStop() {
+    $('#stopMic').hide();
+    $('#saveMic').show();
+    recorder.stop();
+    recorder.getBuffer(holdRecorded);
+}
+
+function recordSave() {
+    $('#saveMic').hide();
+    $('#recordMic').show();
+
+    var newBuffer = audio.createBuffer(1,
+                                       lastRecording[0].length,
+                                       audio.sampleRate
+                                      );
+
+    var name = $('#recname').val();
+
+    if (socket) {
+        socket.emit('sound', {name: name,
+                              data: lastRecording[0].buffer});
+    }
+
+    newBuffer.getChannelData(0).set(lastRecording[0]);
+    drum_engine.addChannel(name, newBuffer);
+    drum_ui.renderTrack(name);
+
+    recorder.clear();
+    lastRecording=null;
+}
+
+function recordCancel() {
+    $('#saveMic').hide();
+    $('#recordMic').show();
+
+    recorder.clear();
+    lastRecording=null;
+}
+

@@ -20,7 +20,7 @@
 
     <div id="drum">
 
-      <span style="font-size: 40">GangDrum Collaborative Drum Sequencer</span><br>
+      <span style="font-size: 40">GangDrum</span><br>
 
       <input id="playbutton" style="width: 50px" type=submit value="play" onClick="drum_ui.playPause()" />
       <input id="stopbutton" style="width: 50px" type=submit value="stop"
@@ -38,18 +38,28 @@
       </div>
 
       <div id="tracks">
-        <div id="track#kick">
-          <div class="trackname"> Kick</div>
-          <div class="tracknotes">
-            <div id="n00" class="note0">&nbsp;</div>
-            <div id="n01" class="note0">&nbsp;</div>
-            <div id="n02" class="note0">&nbsp;</div>
-            <div id="n03" class="note0">&nbsp;</div>
-            <div id="n04" class="note1">&nbsp;</div>
-            <div id="n05" class="note1">&nbsp;</div>
-            <div id="n06" class="note1">&nbsp;</div>
-            <div id="n07" class="note1">&nbsp;</div>
-          </div>
+
+      </div>
+
+      <canvas id="meter">
+        
+      </canvas>
+
+      <div id="recordingBox">
+        <div id="enableMic">
+          <input id="rec" type=submit value="enable microphone" onClick="enableMic()" />
+        </div>
+        <div id="recordMic">
+          <input id="rec" type=submit value="record new" onClick="recordNew()" />
+        </div>
+        <div id="stopMic">
+          <input id="rec" type=submit value="stop recording" onClick="recordStop()" />
+        </div>
+        <div id="saveMic">
+          <input id="recname" type=text value="" />
+          <input id="rec" type=submit value="save recording"
+                 onClick="recordSave()" />
+          <input id="rec" type=submit value="cancel" onClick="recordCancel()" />
         </div>
       </div>
 
