@@ -20,11 +20,19 @@ io.on('connection', function(socket) {
         console.log('a user disconnected');
     });
 
-    socket.on('drum', function(msg) {
+    socket.on('note', function(msg) {
         console.log('a drum note setting has arrived: ' +msg);
         // io.emit('drum', msg);
-        socket.broadcast.emit('drum', msg);
+        socket.broadcast.emit('note', msg);
     });
+
+    socket.on('sound', function(msg) {
+        console.log('a new sound has arrived: ' +msg);
+        // io.emit('drum', msg);
+        socket.broadcast.emit('sound', msg);
+    });
+
+
 
 });
 

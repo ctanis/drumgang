@@ -323,7 +323,7 @@ function DrumUI(docelt) {
                                     d[x] = (d[x]+1) % 2;
                                     console.log(d[x]);
 
-                                    socket.emit('drum', track+'-'+x+'-'+d[x]);
+                                    socket.emit('note', track+'-'+x+'-'+d[x]);
                                     console.log("emitting " + track+'-'+x+'-'+d[x]);
                                     
                                 }}(track, td, i)
@@ -404,10 +404,20 @@ function loadRecorded(audiodata) {
 
     // console.log(audiodata[0].length + " - " + min + " - " + max);
 
+
+    var name ='Recorded'+recCount++;
+
+    console.log('sending sound to rest of the world');
+    console.log(audiodata[0]);
+    socket.emit('sound', { name: name,
+                           data: audiodata[0].buffer
+        
+                         });
+
     newBuffer.getChannelData(0).set(audiodata[0]);
     // newBuffer.getChannelData(1).set(audiodata[1]);
 
-    drum_ui.newTrack('Recorded'+recCount++, newBuffer);
+    drum_ui.newTrack(name, newBuffer);
     recorder.clear();
 };
 
@@ -440,7 +450,7 @@ function setupsocket()
 {
     socket = io();
 
-    socket.on('drum', function(msg) {
+    socket.on('note', function(msg) {
         console.log("got: " + msg);
 
         var parts = msg.split('-');
@@ -459,5 +469,21 @@ function setupsocket()
         drum_ui.trackdata[track][note]=value;
     });
 
+
+    socket.on('sound', function(msg) {
+        console.log(msg);
+
+        var audioContext = drum_ui.drum_machine.audio;
+        var f32buff = new Float32Array(msg.data);
+
+
+        var newBuffer = audioContext.createBuffer( 1,
+                                                   f32buff.length,
+                                                   audioContext.sampleRate );
+
+        newBuffer.getChannelData(0).set(f32buff);
+
+        drum_ui.newTrack(msg.name, newBuffer);
+    });
 
 }
