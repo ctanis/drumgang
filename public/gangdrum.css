@@ -1,0 +1,96 @@
+body {
+    background: purple;
+    font-family: Courier;
+}
+
+#drum {
+    color: yellow;
+    background-color: black;
+    border: solid 2px green;
+    margin: 20px;
+    padding: 20px;
+}
+
+
+#tracks {
+    margin: 10px;
+    padding: 10px;
+}
+
+.trackname {
+    color: red;
+    display: inline-block;
+    width: 120px;
+    height: 30px;
+    text-align:center;
+}
+
+.tracknotes {
+    display: inline-block;
+    padding: 0px;
+    margin: 0px;
+    line-height: 50px;
+    vertical-align: middle;
+
+}
+
+
+.note0 {
+    background-color: white;
+    border: solid 1px black;
+
+    display:inline-block;
+
+    text-align: center;
+    vertical-align: middle;
+    color: black;
+
+
+    padding: 10px;
+    margin: 10px;
+    width: 40px;
+    height: 40px;
+    padding: 0px;
+    margin: 0px;
+}
+
+.note1 {
+    background-color: blue;
+    border: solid 1px black;
+
+    display:inline-block;
+
+    text-align: center;
+    vertical-align: middle;
+    color: black;
+
+    padding: 10px;
+    margin: 10px;
+    width: 40px;
+    height: 40px;
+    padding: 0px;
+    margin: 0px;
+
+}
+
+.noteon {
+    position: relative;
+    top: 5px;
+}
+
+.now {
+    background-color: yellow;
+}
+
+
+#sessionBox {
+    float: right;
+}
+
+input {
+    background-color: gray;
+    border: 0px;
+}
+
+
+

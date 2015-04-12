@@ -1,0 +1,53 @@
+<html>
+  <head>
+    <title>Gang Drum Demo</title>
+    <script type="text/javascript" src="lib/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="lib/recorder.js"></script>
+    <script type="text/javascript" src="gang2.js"></script>
+    <link rel="stylesheet" type="text/css" href="gangdrum.css" />
+
+    <script>
+      $( document ).ready(function() {
+      start();
+      });
+    </script>
+
+
+  </head>
+
+  <body>
+
+    <div id="drum">
+
+      <span style="font-size: 40">GangDrum Collaborative Drum Sequencer</span><br>
+
+      <input type=submit value="play" onClick="drum_ui.start()" />
+      <input type=submit value="stop" onClick="drum_ui.stop()" />
+      Tempo: <input id="tempo" type=text size=4 onChange="drum_ui.setTempo()" value=120 />
+
+      <div id="sessionBox" style="float: right">
+        <input id="session" value="hackathon" />
+      </div>
+
+      <div id="tracks">
+        <div id="track#kick">
+          <div class="trackname"> Kick</div>
+          <div class="tracknotes">
+            <div id="n00" class="note0">&nbsp;</div>
+            <div id="n01" class="note0">&nbsp;</div>
+            <div id="n02" class="note0">&nbsp;</div>
+            <div id="n03" class="note0">&nbsp;</div>
+            <div id="n04" class="note1">&nbsp;</div>
+            <div id="n05" class="note1">&nbsp;</div>
+            <div id="n06" class="note1">&nbsp;</div>
+            <div id="n07" class="note1">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </body>
+</html>
+
