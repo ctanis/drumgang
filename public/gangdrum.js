@@ -4,6 +4,7 @@ var drum_ui;
 var recorder;
 var recCount=0;
 var micinput;
+var socket;
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
@@ -53,7 +54,7 @@ function start(uielt) {
     load('Tom02', 'samples/k5electro/CYCdh_ElecK02-Tom02.wav');
     //    load('Tom03', 'samples/k5electro/CYCdh_ElecK02-Tom03.wav');
 
-
+    setupsocket();
 }
 
 
@@ -162,7 +163,7 @@ function GangDrum(audio) {
         for (var i in this.channels)
         {
             if (this.channels[i].source)
-                this.channels[i].source.stop();
+                this.channels[i].source.stop(0);
         }
 
     };
@@ -233,7 +234,7 @@ function GangDrum(audio) {
     {
         this.tempo = tempo;
         this.updateTiming();
-    }
+    };
 
 
 
@@ -292,7 +293,7 @@ function DrumUI(docelt) {
 
     this.setTempo = function(tempo) {
         this.drum_machine.setTempo(tempo);
-    }
+    };
 
     this.newTrack = function(name, audiodata) {
 
@@ -311,7 +312,7 @@ function DrumUI(docelt) {
                                '</span>');
 
             $('#n'+track+'-'+i).change(
-                function(d, x) {return function()
+                function(tr, d, x) {return function()
                                 {
                                     // toggle note for track, note x
                                     if (typeof d[x] == 'undefined' )
@@ -320,11 +321,25 @@ function DrumUI(docelt) {
                                     }
 
                                     d[x] = (d[x]+1) % 2;
-                                }}(td, i)
+                                    console.log(d[x]);
+
+                                    socket.emit('drum', track+'-'+x+'-'+d[x]);
+                                    console.log("emitting " + track+'-'+x+'-'+d[x]);
+                                    
+                                }}(track, td, i)
             );
         }
 
     };
+
+
+    this.setDrumNote = function(track, note, state) {
+
+        this.trackdata[note]=state;
+
+    };
+
+
 
     this.drawTime = function(note) {
         $('.s'+note).css("background-color", "blue");
@@ -353,7 +368,7 @@ function DrumUI(docelt) {
     };
 
     
-    if (! this.gotUserMedia) {
+    if (! this.gotUserMedia && typeof navigator.getUserMedia != 'undefined') {
         navigator.getUserMedia({audio:true}, startUserMedia, function(e) {
             console.log("error: no live audio input! " + e);
         });
@@ -418,3 +433,31 @@ function startUserMedia(stream) {
                             });
     console.log('Recorder initialised.');
   }
+
+
+
+function setupsocket()
+{
+    socket = io();
+
+    socket.on('drum', function(msg) {
+        console.log("got: " + msg);
+
+        var parts = msg.split('-');
+
+        // split up msg
+        var track=parts[0];
+        var note=parts[1];
+        var value=parts[2];
+
+        console.log(track);
+        console.log(note);
+        console.log(value);
+
+        // drum_ui.trackdata[track][note]=state;
+        $('#n'+track+'-'+note).prop('checked', (value !=0 ? true : false));
+        drum_ui.trackdata[track][note]=value;
+    });
+
+
+}
