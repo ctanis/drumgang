@@ -22,9 +22,16 @@
 
       <span style="font-size: 40">GangDrum Collaborative Drum Sequencer</span><br>
 
-      <input type=submit value="play" onClick="drum_ui.start()" />
-      <input type=submit value="stop" onClick="drum_ui.stop()" />
+      <input id="playbutton" style="width: 50px" type=submit value="play" onClick="drum_ui.playPause()" />
+      <input id="stopbutton" style="width: 50px" type=submit value="stop"
+             onClick="drum_ui.stop()" />
+      <div style="display: inline-block; width: 50px">&nbsp;</div>
       Tempo: <input id="tempo" type=text size=4 onChange="drum_ui.setTempo()" value=120 />
+
+      <div style="display: inline-block; width: 500px">&nbsp;</div>
+      <input id="stopbutton" style="width: 50px" type=submit value="clear"
+             onClick="drum_ui.clear()" />
+
 
       <div id="sessionBox" style="float: right">
         <input id="session" value="hackathon" />

@@ -51,7 +51,22 @@ function start() {
     drum_ui = new DrumUI("#drum");
 
 
-    
+    $(window).keydown(function(e) {
+        // console.log(e.keyCode);
+
+        switch (e.keyCode)
+        {
+        case 32:                //space
+            drum_ui.playPause();
+            break;
+        case 13:                //enter
+            drum_ui.stop();
+            break;
+        }
+    });
+
+
+// initial drum kit    
     load('Kick01', 'samples/k5electro/CYCdh_ElecK02-Kick01.wav');
     load('Kick02', 'samples/k5electro/CYCdh_ElecK02-Kick02.wav');
     load('ClHat01', 'samples/k5electro/CYCdh_ElecK02-ClHat01.wav');
@@ -121,19 +136,35 @@ function DrumUI(uielt) {
         });
         
 
-
-
     }
 
 
+    
 
-    this.start = function() {
-        drum_engine.start();
+
+    this.playPause = function() {
+
+        var curr = $('#playbutton').val();
+
+        if (curr == "pause")
+        {
+            drum_engine.stop();
+            $('#playbutton').val('play');
+        }
+        else
+        {
+            drum_engine.start();
+            $('#playbutton').val('pause');
+        }
+
     };
 
     this.stop = function() {
         drum_engine.stop();
         drum_engine.tick=0;
+
+        $('#playbutton').val('play');
+
         for (var n=0; n<drum_engine.loopLen; n++) {
             $('.s'+n).css("background-color", "");
         }
@@ -178,7 +209,7 @@ function DrumUI(uielt) {
 
             var initval;
             if (t.notes[n]) {
-                initval='<img src="noteon.png" class="noteon"/>';
+                initval='<img src="noteon.png" class="noteon" width=30px height=10px/>';
             }
             else
             {
@@ -218,7 +249,7 @@ function DrumUI(uielt) {
     {
         if (value>0)
         {
-            $('#n'+track+'-'+note).html('<img src="noteon.png" class="noteon"/>');
+            $('#n'+track+'-'+note).html('<img src="noteon.png" width=30px height=10px class="noteon"/>');
         }
         else
         {
@@ -237,6 +268,13 @@ function DrumUI(uielt) {
         $('.s'+prevnote).css("background-color", "");
 
     };
+
+
+    this.clear = function() {
+        drum_engine.clear();
+        this.draw();
+    };
+
 }
 
 
@@ -290,7 +328,6 @@ function GangDrum() {
     // stop sequencer
     this.stop = function() {
         this.playing = false;
-        this.tick=0;
 
         // stop the tracks
         for (var i in this.channels)
