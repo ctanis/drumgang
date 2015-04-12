@@ -1,6 +1,11 @@
 'use strict';
 
 var drum_ui;
+var recorder;
+var recCount=0;
+var micinput;
+
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
 // load a channel using wave file from URL
 function load(name, url) {
@@ -29,8 +34,25 @@ function load(name, url) {
 function start(uielt) {
     drum_ui = new DrumUI(uielt);
 
-    load('Kick1', 'samples/kick1.wav');
-    load('Boop', 'samples/boop.wav');
+    // load('Kick1', 'samples/kick1.wav');
+    // load('Boop', 'samples/boop.wav');
+
+    load('Kick01', 'samples/k5electro/CYCdh_ElecK02-Kick01.wav');
+    //    load('Kick02', 'samples/k5electro/CYCdh_ElecK02-Kick02.wav');
+    //    load('ClHat01', 'samples/k5electro/CYCdh_ElecK02-ClHat01.wav');
+    load('ClHat02', 'samples/k5electro/CYCdh_ElecK02-ClHat02.wav');
+    //    load('Clap01', 'samples/k5electro/CYCdh_ElecK02-Clap01.wav');
+    load('Clap02', 'samples/k5electro/CYCdh_ElecK02-Clap02.wav');
+    load('FX01', 'samples/k5electro/CYCdh_ElecK02-FX01.wav');
+    //    load('FX02', 'samples/k5electro/CYCdh_ElecK02-FX02.wav');
+    //    load('FX03', 'samples/k5electro/CYCdh_ElecK02-FX03.wav');
+    load('HfHat', 'samples/k5electro/CYCdh_ElecK02-HfHat.wav');
+    load('Snr01', 'samples/k5electro/CYCdh_ElecK02-Snr01.wav');
+    //    load('Snr02', 'samples/k5electro/CYCdh_ElecK02-Snr02.wav');
+    load('Tom01', 'samples/k5electro/CYCdh_ElecK02-Tom01.wav');
+    load('Tom02', 'samples/k5electro/CYCdh_ElecK02-Tom02.wav');
+    //    load('Tom03', 'samples/k5electro/CYCdh_ElecK02-Tom03.wav');
+
 
 }
 
@@ -50,10 +72,14 @@ function DrumChannel(audio, master, name, buffer, notes) {
 
     this.play = function()
     {
-        var source = audio.createBufferSource();
-        source.buffer = this.buffer;
-        source.connect(this.gainNode);
-        source.start(0);
+        // cut previous sound
+        if (this.source)
+            this.source.stop(0);
+
+        this.source = audio.createBufferSource();
+        this.source.buffer = this.buffer;
+        this.source.connect(this.gainNode);
+        this.source.start(0);
     };
 
     this.setVol = function(gain)
@@ -69,7 +95,6 @@ function DrumChannel(audio, master, name, buffer, notes) {
 
     this.triggerNote = function(note) {
 
-        console.log("n: " + this.notes[note]);
         if (this.notes[note])
         {
             this.play();
@@ -96,8 +121,8 @@ function GangDrum(audio) {
 
     this.updateTiming = function() {
         this.ticksPerNote = this.ticks * 60 / this.tempo / this.notesPerBeat;
-        console.log("tpn: " + this.ticksPerNote);
-        console.log("tpl: " + this.ticksPerNote * this.loopLen);
+        // console.log("tpn: " + this.ticksPerNote);
+        // console.log("tpl: " + this.ticksPerNote * this.loopLen);
     };
 
     this.updateTiming();
@@ -132,6 +157,14 @@ function GangDrum(audio) {
 
     this.stop = function() {
         this.playing = false;
+        this.tick=0;
+
+        for (var i in this.channels)
+        {
+            if (this.channels[i].source)
+                this.channels[i].source.stop();
+        }
+
     };
 
     this.lastNote=-1;
@@ -140,7 +173,8 @@ function GangDrum(audio) {
 
         // figure out loop position based on ticks/tempo
 
-        // hit every channel with the current position
+        if (! this.playing)
+            return;
 
         this.tick++;
         if (this.tick >= this.ticksPerNote * this.loopLen)
@@ -152,7 +186,6 @@ function GangDrum(audio) {
         {
             this.lastNote = note;
 
-            console.log("note: " + note);
 
             for (var i in this.channels)
             {
@@ -240,6 +273,7 @@ function GangDrum(audio) {
 
 function DrumUI(docelt) {
     this.trackdata=[];
+    this.gotUserMedia=false;
 
     this.docelt = docelt;
     this.drum_machine
@@ -251,6 +285,9 @@ function DrumUI(docelt) {
 
     this.pause = function() {
         this.drum_machine.stop();
+
+        for (var n=0; n<this.drum_machine.loopLen; n++)
+            $('.s'+n).css("background-color", "white");
     };
 
     this.setTempo = function(tempo) {
@@ -269,23 +306,21 @@ function DrumUI(docelt) {
 
         for (var i=0;  i<this.drum_machine.loopLen; i++)
         {
-            console.log(td);
             $('#'+name).append('<span class="s'+i+'">'+
                                '<input type="checkbox" id="n'+track+'-'+i +'"/>' +
                                '</span>');
 
             $('#n'+track+'-'+i).change(
                 function(d, x) {return function()
-                {
-                    // toggle note for track, note x
-                    if (typeof d[x] == 'undefined' )
-                    {
-                        d[x]=0;
-                    }
+                                {
+                                    // toggle note for track, note x
+                                    if (typeof d[x] == 'undefined' )
+                                    {
+                                        d[x]=0;
+                                    }
 
-                    d[x] = (d[x]+1) % 2;
-                    console.log(d);
-                }}(td, i)
+                                    d[x] = (d[x]+1) % 2;
+                                }}(td, i)
             );
         }
 
@@ -298,4 +333,88 @@ function DrumUI(docelt) {
     };
 
     this.drum_machine.uiCallback=this.drawTime.bind(this);
+
+    this.record = function() {
+
+
+        recorder.record();
+
+
+    };
+    
+    this.stopRecord = function() {
+
+        recorder.stop();
+        
+        // capture stream from mic
+        // dump converted audio buffer into new channel
+        recorder.getBuffer(loadRecorded);
+
+    };
+
+    
+    if (! this.gotUserMedia) {
+        navigator.getUserMedia({audio:true}, startUserMedia, function(e) {
+            console.log("error: no live audio input! " + e);
+        });
+        this.gotUserMedia=true;
+        console.log("recording at " + this.drum_machine.audio.sampleRate);
+    }
 }
+
+
+function loadRecorded(audiodata) {
+    
+    var audioContext = drum_ui.drum_machine.audio;
+    var newBuffer = audioContext.createBuffer( 1,
+                                               audiodata[0].length,
+                                               audioContext.sampleRate );
+
+    console.log(audiodata); 
+    console.log("chans: " + newBuffer.numberOfChannels);
+    console.log("chans: " + newBuffer.sampleRate);
+
+    // TODO: audio file cleanup
+
+    // console.log(audiodata[0].length);
+    // var max=-9999;
+    // var min=9999;
+    // for (var i=0; i<audiodata[0].length; i++)
+    // {
+    //     if (audiodata[0][i] > max)
+    //         max = audiodata[0][i];
+    //     if (audiodata[0][i] < min)
+    //         min = audiodata[0][i];
+    // }
+
+    // console.log(audiodata[0].length + " - " + min + " - " + max);
+
+    newBuffer.getChannelData(0).set(audiodata[0]);
+    // newBuffer.getChannelData(1).set(audiodata[1]);
+
+    drum_ui.newTrack('Recorded'+recCount++, newBuffer);
+    recorder.clear();
+};
+
+
+// from https://github.com/mattdiamond/Recorderjs
+function startUserMedia(stream) {
+
+    var audio = drum_ui.drum_machine.audio;
+    micinput = audio.createMediaStreamSource(stream);
+    
+    console.log('Media stream created.');
+
+
+    // connect the AudioBufferSourceNode to the gainNode
+    // and the gainNode to the destination, so we can play the
+    // music and adjust the volume using the mouse cursor
+    // micinput.connect(audio.destination);
+    
+    recorder = new Recorder(micinput,
+                            {
+                                workerPath: "lib/recorderWorker.js",
+                                bufferLen: 256
+                            });
+    console.log('Recorder initialised.');
+  }
