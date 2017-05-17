@@ -368,7 +368,7 @@ function GangDrum() {
     this.master.threshold.value = -50;
     this.master.knee.value = 40;
     this.master.ratio.value = 12;
-    this.master.reduction.value = -20;
+    // this.master.reduction.value = -20;
     this.master.attack.value = 0;
     this.master.release.value = 0.25;
     this.master.connect(audio.destination);
